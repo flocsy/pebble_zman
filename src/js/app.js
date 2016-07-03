@@ -2,7 +2,6 @@ var suncalc = require('suncalc');
 suncalc.addTime(-16.1, 'alot_hashachar', 0);
 suncalc.addTime(-11.5, 'misheyakir', 0);
 suncalc.addTime(-8.5, 0, 'tzeit');
-suncalc.addTime(16.1, 'mincha_gedola',0);
 
 function locationSuccess(pos) {
   // We will request the weather here
@@ -10,7 +9,25 @@ function locationSuccess(pos) {
   var long = pos.coords.longitude;
   var today = new Date();
   var sunTimes = suncalc.getTimes( today,  lat, long);
-  console.log(sunTimes.tzeit);
+  
+  var sunset = sunTimes.sunset;
+  var sunrise = sunTimes.sunrise;
+  var zhour = (sunset-sunrise) / 12;
+  var halachicTimes = {
+    'ALOS': sunTimes.alot_hashachar,
+    'MISHEYAKIR' : sunTimes.misheyakir,
+    'NEITZ' : sunrise,
+    'SHMA_GRA': new Date(sunrise.getTime()+(zhour*3)),
+    'TEFILA_GRA':new Date(sunrise.getTime()+(zhour*4)),
+    'CHATZOS':new Date(sunrise.getTime()+(zhour*6)),
+    'MINCHA_GEDOLA' : new Date(sunrise.getTime()+(zhour*6)+(zhour/2)),
+    'SHKIA' : sunset,
+    'TZAIS' : sunTimes.tzeit
+  };
+   
+  for(var key in halachicTimes){
+    console.log(key + halachicTimes[key]);
+  }
 }
 
 function locationError(err) {

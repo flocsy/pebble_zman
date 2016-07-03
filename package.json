@@ -11,7 +11,9 @@
         ],
         "displayName": "Hebrew Times Analog",
         "enableMultiJS": true,
-        "messageKeys": [],
+        "messageKeys": [
+            "ALOS"
+        ],
         "projectType": "native",
         "resources": {
             "media": []
