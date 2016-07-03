@@ -1,6 +1,7 @@
 {
     "author": "Beezy Works Studios",
     "dependencies": {
+        "date-format-lite": "^0.9.0",
         "suncalc": "^1.7.0"
     },
     "keywords": [],
@@ -12,7 +13,15 @@
         "displayName": "Hebrew Times Analog",
         "enableMultiJS": true,
         "messageKeys": [
-            "ALOS"
+            "ALOS",
+            "MISHEYAKIR",
+            "NEITZ",
+            "SHMA_GRA",
+            "TEFILA_GRA",
+            "CHATZOS",
+            "MINCHA_GEDOLA",
+            "SHKIA",
+            "TZAIS"
         ],
         "projectType": "native",
         "resources": {
@@ -24,7 +33,7 @@
             "basalt",
             "chalk"
         ],
-        "uuid": "ecc8f112-318f-4ee2-be11-53c63b8a1139",
+        "uuid": "e5fb8bbe-7ad2-41e1-bb9b-cbae2e00838c",
         "watchapp": {
             "watchface": true
         }

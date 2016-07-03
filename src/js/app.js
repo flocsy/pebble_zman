@@ -1,4 +1,5 @@
 var suncalc = require('suncalc');
+require("date-format-lite");
 suncalc.addTime(-16.1, 'alot_hashachar', 0);
 suncalc.addTime(-11.5, 'misheyakir', 0);
 suncalc.addTime(-8.5, 0, 'tzeit');
@@ -13,21 +14,37 @@ function locationSuccess(pos) {
   var sunset = sunTimes.sunset;
   var sunrise = sunTimes.sunrise;
   var zhour = (sunset-sunrise) / 12;
+  var formatTemplate = "hhmm";
   var halachicTimes = {
-    'ALOS': sunTimes.alot_hashachar,
-    'MISHEYAKIR' : sunTimes.misheyakir,
-    'NEITZ' : sunrise,
-    'SHMA_GRA': new Date(sunrise.getTime()+(zhour*3)),
-    'TEFILA_GRA':new Date(sunrise.getTime()+(zhour*4)),
-    'CHATZOS':new Date(sunrise.getTime()+(zhour*6)),
-    'MINCHA_GEDOLA' : new Date(sunrise.getTime()+(zhour*6)+(zhour/2)),
-    'SHKIA' : sunset,
-    'TZAIS' : sunTimes.tzeit
+    'ALOS': sunTimes.alot_hashachar.format(formatTemplate),
+    'MISHEYAKIR' : sunTimes.misheyakir.format(formatTemplate),
+    'NEITZ' : sunrise.format(formatTemplate),
+    'SHMA_GRA': new Date(sunrise.getTime()+(zhour*3)).format(formatTemplate),
+    'TEFILA_GRA': new Date(sunrise.getTime()+(zhour*4)).format(formatTemplate),
+    'CHATZOS':new Date(sunrise.getTime()+(zhour*6)).format(formatTemplate),
+    'MINCHA_GEDOLA' : new Date(sunrise.getTime()+(zhour*6)+(zhour/2)).format(formatTemplate),
+    'SHKIA' : sunset.format(formatTemplate),
+    'TZAIS' : sunTimes.tzeit.format(formatTemplate)
   };
+  
+  console.log(sunset.format("hh:mm"));
    
-  for(var key in halachicTimes){
-    console.log(key + halachicTimes[key]);
+ // Send to Pebble
+Pebble.sendAppMessage(halachicTimes,
+  function(e) {
+    console.log('Zmanim sent to Pebble successfully!');
+  },
+  function(e) {
+    console.log('Error sending zmanim info to Pebble!');
   }
+                      
+);
+  Pebble.addEventListener('appmessage',
+  function(e) {
+    console.log('AppMessage received!');
+    getWeather();
+  }                     
+);
 }
 
 function locationError(err) {
