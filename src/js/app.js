@@ -23,7 +23,9 @@ function locationSuccess(pos) {
     'CHATZOS':new Date(sunrise.getTime()+(zhour*6)),
     'MINCHA_GEDOLA' : new Date(sunrise.getTime()+(zhour*6)+(zhour/2)),
     'SHKIA' : sunset,
-    'TZAIS' : sunTimes.tzeit
+    'TZAIS' : sunTimes.tzeit,
+    'TZAIS_RT' : new Date(sunset.getTime()+72*60*1000),
+    'CHATZOS_LAILA' : new Date(sunrise.getTime()+(zhour*6) + 12*60*60*1000)
   };
 
   var sendDictionary ={};

@@ -1,4 +1,4 @@
-#include "simple_analog.h"
+#include "watchface.h"
 
 #include "pebble.h"
 #include "hebrewdate.h"
@@ -11,7 +11,9 @@ static GPath *s_tick_paths[NUM_CLOCK_TICKS];
 static GPath *s_minute_arrow, *s_hour_arrow;
 static char s_num_buffer[4], s_day_buffer[6], s_hebday_buffer[3], s_zmantime_buffer[6];
 
-static time_t zmanim[9];
+static GFont s_zmanlabel_font;
+
+static time_t zmanim[11];
 
 static void bg_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -75,12 +77,12 @@ static void date_update_proc(Layer *layer, GContext *ctx) {
   int i = 0;
   while(zmanim[i]<now){
     i++;
-    if(i==9){
-      i=8;
+    if(i==11){
+      i=10;
       break;
     }
   }
-  
+
   text_layer_set_text(s_zmanlabel_label, zman_names[i]);
   struct tm *zmanT = localtime(&zmanim[i]);
   strftime(s_zmantime_buffer, sizeof(s_zmantime_buffer), "%l:%M", zmanT);
@@ -99,12 +101,20 @@ static void date_update_proc(Layer *layer, GContext *ctx) {
 }
 
 static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
-  layer_mark_dirty(window_get_root_layer(s_window));
+  layer_mark_dirty(window_get_root_layer(s_window));  
+  if ((units_changed & HOUR_UNIT) != 0) {
+    //try to refresh zmanim every hour
+    const int inbox_size = 372;
+    const int outbox_size = 32;
+    app_message_open(inbox_size, outbox_size);    
+  }
 }
+
 
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
+  s_zmanlabel_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TAAMEI_FRANK_18));
 
   s_simple_bg_layer = layer_create(bounds);
   layer_set_update_proc(s_simple_bg_layer, bg_update_proc);
@@ -116,18 +126,19 @@ static void window_load(Window *window) {
 
   //create zman title layer
   s_zmanlabel_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(63, 114, 40, 20),
-    GRect(46, 110, 80, 20)));
+    GRect(20, 110, 110, 20),
+    GRect(20, 110, 110, 20)));
   text_layer_set_text(s_zmanlabel_label, s_day_buffer);
-  text_layer_set_background_color(s_zmanlabel_label, GColorBlack);
+  text_layer_set_background_color(s_zmanlabel_label, GColorClear);
   text_layer_set_text_color(s_zmanlabel_label, GColorWhite);
-  text_layer_set_font(s_zmanlabel_label, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  text_layer_set_font(s_zmanlabel_label, s_zmanlabel_font);
+  text_layer_set_text_alignment(s_zmanlabel_label, GTextAlignmentCenter);
   //add to date layer
   layer_add_child(s_date_layer, text_layer_get_layer(s_zmanlabel_label));
 
   //create zman time layer
   s_zmantime_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(90, 114, 18, 20),
+    GRect(55, 130, 80, 20),
     GRect(55, 130, 80, 20)));
   text_layer_set_text(s_zmantime_label, s_num_buffer);
   text_layer_set_background_color(s_zmantime_label, GColorBlack);
@@ -143,7 +154,7 @@ static void window_load(Window *window) {
   text_layer_set_text(s_hebday_label, s_hebday_buffer);
   text_layer_set_background_color(s_hebday_label, GColorBlack);
   text_layer_set_text_color(s_hebday_label, GColorWhite);
-  text_layer_set_font(s_hebday_label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_font(s_hebday_label, s_zmanlabel_font);
   //add to date layer
   layer_add_child(s_date_layer, text_layer_get_layer(s_hebday_label));
 
@@ -173,11 +184,12 @@ static void window_unload(Window *window) {
   text_layer_destroy(s_gregday_label);
 
   layer_destroy(s_hands_layer);
+  fonts_unload_custom_font(s_zmanlabel_font);
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
   // Read tuples for data
-  static Tuple* tuples[9];
+  static Tuple* tuples[11];
   tuples[0] = dict_find(iterator, MESSAGE_KEY_ALOS);
   tuples[1] = dict_find(iterator, MESSAGE_KEY_MISHEYAKIR);
   tuples[2] = dict_find(iterator, MESSAGE_KEY_NEITZ);
@@ -187,8 +199,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   tuples[6] = dict_find(iterator, MESSAGE_KEY_MINCHA_GEDOLA);
   tuples[7] = dict_find(iterator, MESSAGE_KEY_SHKIA);
   tuples[8] = dict_find(iterator, MESSAGE_KEY_TZAIS);
+  tuples[9] = dict_find(iterator, MESSAGE_KEY_TZAIS_RT);
+tuples[10] = dict_find(iterator, MESSAGE_KEY_CHATZOS_LAILA);
 
-  for(int i = 0 ; i<9 ; i++){
+  for(int i = 0 ; i<11 ; i++){
     uint8_t *data = tuples[i]->value->data;
     //   snprintf(s_zmantime_buffer, sizeof(s_zmantime_buffer), "%d:%d", (int)data[0],(int)data[1]);
     time_t day_start = time_start_of_today();
@@ -232,8 +246,8 @@ static void init() {
 
   app_message_register_inbox_received(inbox_received_callback);
   // Open AppMessage
-  const int inbox_size = 496;
-  const int outbox_size = 496;
+  const int inbox_size = 372;
+  const int outbox_size = 32;
   app_message_open(inbox_size, outbox_size);
 }
 

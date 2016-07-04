@@ -4,16 +4,17 @@
 
 #define NUM_CLOCK_TICKS 11
 
-const char *zman_names[9] = {"רחשה תולע", "ריכישמ", "המחה ץנה", "א''רג עמש", "א''רג הליפת", "תוצח", "הלודג החנמ", "המחה תעיקש", "םיבככה תאצ"};
-// zman_names[0] = "alos";
-// zman_names[1] = "mishyakir";
-// zman_names[2] = "haneitz";
-// zman_names[3] = "Shma Gra";
-// zman_names[4] = "Tefila Gra";
-// zman_names[5] = "Chatzos";
-// zman_names[6] = "Mincha Gedola";
-// zman_names[7] = "Shkia";
-// zman_names[8] = "Tzais";
+const char *zman_names[11] = {"רחשה תולע",
+                             "ריכישמ",
+                             "המחה ץנה",
+                             "א''רג עמש", 
+                             "א''רג הליפת",
+                             "תוצח",
+                             "הלודג החנמ", 
+                             "המחה תעיקש", 
+                             "םיבככה תאצ",
+                            "ת''ר תאצ",
+                            "הלילה תוצח"};
 
 static const struct GPathInfo ANALOG_BG_POINTS[] = {
   { 4,
