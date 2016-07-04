@@ -71,24 +71,23 @@ static void date_update_proc(Layer *layer, GContext *ctx) {
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
 
-  //draw zman label
-  strftime(s_day_buffer, sizeof(s_day_buffer), "%a", t);
-  text_layer_set_text(s_zmanlabel_label, "עמש ז''ס");
-
-  //draw zman time
-  time_t zman = zmanim[8];
-  for(int i =8 ;i >-1 ;i--){
-    if(zmanim[i]<now){
+  //draw zman time 
+  int i = 0;
+  while(zmanim[i]<now){
+    i++;
+    if(i==9){
+      i=8;
       break;
     }
-    zman = zmanim[i];
   }
-  struct tm *zmanT = localtime(&zman);
+  
+  text_layer_set_text(s_zmanlabel_label, zman_names[i]);
+  struct tm *zmanT = localtime(&zmanim[i]);
   strftime(s_zmantime_buffer, sizeof(s_zmantime_buffer), "%l:%M", zmanT);
   text_layer_set_text(s_zmantime_label, s_zmantime_buffer);
 
   //draw gregdate
-  strftime(s_num_buffer, sizeof(s_num_buffer), "%d", t);
+  strftime(s_num_buffer, sizeof(s_num_buffer), "%e", t);
   text_layer_set_text(s_gregday_label, s_num_buffer);
 
   //draw hebdate
