@@ -9,7 +9,9 @@ static TextLayer *s_zmanlabel_label, *s_zmantime_label, *s_hebday_label, *s_greg
 
 static GPath *s_tick_paths[NUM_CLOCK_TICKS];
 static GPath *s_minute_arrow, *s_hour_arrow;
-static char s_num_buffer[4], s_day_buffer[6], s_hebday_buffer[3];
+static char s_num_buffer[4], s_day_buffer[6], s_hebday_buffer[3], s_zmantime_buffer[6];
+
+static time_t zmanim[9];
 
 static void bg_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -74,7 +76,16 @@ static void date_update_proc(Layer *layer, GContext *ctx) {
   text_layer_set_text(s_zmanlabel_label, "עמש ז''ס");
 
   //draw zman time
-  text_layer_set_text(s_zmantime_label, "55:55");
+  time_t zman = zmanim[8];
+  for(int i =8 ;i >-1 ;i--){
+    if(zmanim[i]<now){
+      break;
+    }
+    zman = zmanim[i];
+  }
+  struct tm *zmanT = localtime(&zman);
+  strftime(s_zmantime_buffer, sizeof(s_zmantime_buffer), "%l:%M", zmanT);
+  text_layer_set_text(s_zmantime_label, s_zmantime_buffer);
 
   //draw gregdate
   strftime(s_num_buffer, sizeof(s_num_buffer), "%d", t);
@@ -165,30 +176,28 @@ static void window_unload(Window *window) {
   layer_destroy(s_hands_layer);
 }
 
-static void parse_zman_tuple(Tuple *zman_tuple ){
-  static char conditions_buffer[5];
-  snprintf(conditions_buffer, sizeof(conditions_buffer), "%s", zman_tuple->value->cstring);
-  int hourTens = conditions_buffer[0] - '0';
-  int hourOnes = conditions_buffer[1] - '0';
-  int minuteTens = conditions_buffer[2] - '0';
-  int minuteOnes = conditions_buffer[3] - '0';
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "first dig %d%d:%d%d", hourTens,hourOnes,minuteTens,minuteOnes);
-}
-
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-   // Read tuples for data
-  zmanim[0] = dict_find(iterator, MESSAGE_KEY_ALOS);
-  zmanim[1] = dict_find(iterator, MESSAGE_KEY_MISHEYAKIR);
-  zmanim[2] = dict_find(iterator, MESSAGE_KEY_NEITZ);
-  zmanim[3] = dict_find(iterator, MESSAGE_KEY_SHMA_GRA);
-  zmanim[4] = dict_find(iterator, MESSAGE_KEY_TEFILA_GRA);
-  zmanim[5] = dict_find(iterator, MESSAGE_KEY_CHATZOS);
-  zmanim[6] = dict_find(iterator, MESSAGE_KEY_MINCHA_GEDOLA);
-  zmanim[7] = dict_find(iterator, MESSAGE_KEY_SHKIA);
-  zmanim[8] = dict_find(iterator, MESSAGE_KEY_TZAIS);
-  
+  // Read tuples for data
+  static Tuple* tuples[9];
+  tuples[0] = dict_find(iterator, MESSAGE_KEY_ALOS);
+  tuples[1] = dict_find(iterator, MESSAGE_KEY_MISHEYAKIR);
+  tuples[2] = dict_find(iterator, MESSAGE_KEY_NEITZ);
+  tuples[3] = dict_find(iterator, MESSAGE_KEY_SHMA_GRA);
+  tuples[4] = dict_find(iterator, MESSAGE_KEY_TEFILA_GRA);
+  tuples[5] = dict_find(iterator, MESSAGE_KEY_CHATZOS);
+  tuples[6] = dict_find(iterator, MESSAGE_KEY_MINCHA_GEDOLA);
+  tuples[7] = dict_find(iterator, MESSAGE_KEY_SHKIA);
+  tuples[8] = dict_find(iterator, MESSAGE_KEY_TZAIS);
+
   for(int i = 0 ; i<9 ; i++){
-    parse_zman_tuple(zmanim[i]);
+    uint8_t *data = tuples[i]->value->data;
+    //   snprintf(s_zmantime_buffer, sizeof(s_zmantime_buffer), "%d:%d", (int)data[0],(int)data[1]);
+    time_t day_start = time_start_of_today();
+    day_start += data[0]*60*60;
+    day_start += data[1]*60;
+    zmanim[i]=day_start;
+    struct tm *t = localtime(&day_start);
+    strftime(s_zmantime_buffer, sizeof(s_zmantime_buffer), "%l:%M", t);
   }
 }
 
@@ -224,8 +233,8 @@ static void init() {
 
   app_message_register_inbox_received(inbox_received_callback);
   // Open AppMessage
-  const int inbox_size = 62;
-  const int outbox_size = 62;
+  const int inbox_size = 496;
+  const int outbox_size = 496;
   app_message_open(inbox_size, outbox_size);
 }
 

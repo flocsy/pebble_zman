@@ -4,7 +4,7 @@
 
 #define NUM_CLOCK_TICKS 11
 
-static Tuple* zmanim[9];
+
 
 static const struct GPathInfo ANALOG_BG_POINTS[] = {
   { 4,

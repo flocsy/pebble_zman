@@ -10,41 +10,48 @@ function locationSuccess(pos) {
   var long = pos.coords.longitude;
   var today = new Date();
   var sunTimes = suncalc.getTimes( today,  lat, long);
-  
+
   var sunset = sunTimes.sunset;
   var sunrise = sunTimes.sunrise;
   var zhour = (sunset-sunrise) / 12;
-  var formatTemplate = "hhmm";
   var halachicTimes = {
-    'ALOS': sunTimes.alot_hashachar.format(formatTemplate),
-    'MISHEYAKIR' : sunTimes.misheyakir.format(formatTemplate),
-    'NEITZ' : sunrise.format(formatTemplate),
-    'SHMA_GRA': new Date(sunrise.getTime()+(zhour*3)).format(formatTemplate),
-    'TEFILA_GRA': new Date(sunrise.getTime()+(zhour*4)).format(formatTemplate),
-    'CHATZOS':new Date(sunrise.getTime()+(zhour*6)).format(formatTemplate),
-    'MINCHA_GEDOLA' : new Date(sunrise.getTime()+(zhour*6)+(zhour/2)).format(formatTemplate),
-    'SHKIA' : sunset.format(formatTemplate),
-    'TZAIS' : sunTimes.tzeit.format(formatTemplate)
+    'ALOS': sunTimes.alot_hashachar,
+    'MISHEYAKIR' : sunTimes.misheyakir,
+    'NEITZ' : sunrise,
+    'SHMA_GRA': new Date(sunrise.getTime()+(zhour*3)),
+    'TEFILA_GRA': new Date(sunrise.getTime()+(zhour*4)),
+    'CHATZOS':new Date(sunrise.getTime()+(zhour*6)),
+    'MINCHA_GEDOLA' : new Date(sunrise.getTime()+(zhour*6)+(zhour/2)),
+    'SHKIA' : sunset,
+    'TZAIS' : sunTimes.tzeit
   };
+
+  var sendDictionary ={};
   
-  console.log(sunset.format("hh:mm"));
-   
- // Send to Pebble
-Pebble.sendAppMessage(halachicTimes,
-  function(e) {
-    console.log('Zmanim sent to Pebble successfully!');
-  },
-  function(e) {
-    console.log('Error sending zmanim info to Pebble!');
+  for (var key in halachicTimes) {
+    if (halachicTimes.hasOwnProperty(key)) {
+      var zman = halachicTimes[key];
+      sendDictionary[key] = [zman.getHours(), zman.getMinutes()];
+    }
   }
-                      
-);
-  Pebble.addEventListener('appmessage',
-  function(e) {
-    console.log('AppMessage received!');
-    getWeather();
-  }                     
-);
+
+
+//  Send to Pebble
+    Pebble.sendAppMessage(sendDictionary,
+                          function(e) {
+                            console.log('Zmanim sent to Pebble successfully!');
+                          },
+                          function(e) {
+                            console.log('Error sending zmanim info to Pebble!');
+                          }
+
+                         );
+    Pebble.addEventListener('appmessage',
+                            function(e) {
+                              console.log('AppMessage received!');
+                              getWeather();
+                            }                     
+                           );
 }
 
 function locationError(err) {
@@ -61,10 +68,10 @@ function getWeather() {
 
 // Listen for when the watchface is opened
 Pebble.addEventListener('ready', 
-  function(e) {
-    console.log('PebbleKit JS ready!');
+                        function(e) {
+                          console.log('PebbleKit JS ready!');
 
-    // Get the initial weather
-    getWeather();
-  }
-);
+                          // Get the initial weather
+                          getWeather();
+                        }
+                       );
