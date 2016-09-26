@@ -2,6 +2,54 @@
 
 #include "pebble.h"
 #include "hebrewdate.h"
+#include "zman_calculator.h"
+
+
+int isdigit(int c)
+{
+  return (c >= '0' && c <= '9' ? 1 : 0);
+}
+
+double str_to_double(char *s)
+{
+  double a = 0.0;
+  int e = 0;
+  int c;
+  while ((c = *s++) != '\0' && isdigit(c)) {
+    a = a*10.0 + (c - '0');
+  }
+  if (c == '.') {
+    while ((c = *s++) != '\0' && isdigit(c)) {
+      a = a*10.0 + (c - '0');
+      e = e-1;
+    }
+  }
+  if (c == 'e' || c == 'E') {
+    int sign = 1;
+    int i = 0;
+    c = *s++;
+    if (c == '+')
+      c = *s++;
+    else if (c == '-') {
+      c = *s++;
+      sign = -1;
+    }
+    while (isdigit(c)) {
+      i = i*10 + (c - '0');
+      c = *s++;
+    }
+    e += i*sign;
+  }
+  while (e > 0) {
+    a *= 10.0;
+    e--;
+  }
+  while (e < 0) {
+    a *= 0.1;
+    e++;
+  }
+  return a;
+}
 
 static Window *s_window;
 static Layer *s_simple_bg_layer, *s_date_layer, *s_hands_layer;
@@ -13,7 +61,12 @@ static char s_num_buffer[4], s_day_buffer[6], s_hebday_buffer[3], s_zmantime_buf
 
 static GFont s_zmanlabel_font;
 
-static time_t zmanim[11];
+static double longitude;
+static double latitude;
+
+struct Zmanim MyZmanim;    
+time_t current_zman;
+int current_zman_name=0;
 
 static void bg_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -69,24 +122,84 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_circle(ctx, center, radius);
 }
 
+
+static void refresh_current_zman(){
+  current_zman = MyZmanim.alos;
+    time_t now = time(NULL);
+  current_zman_name=0;
+  
+  if(now>MyZmanim.alos){
+    current_zman_name=1;
+    current_zman = MyZmanim.mishyakir;
+  }
+  
+  if(now>MyZmanim.mishyakir){
+    current_zman_name=2;
+    current_zman = MyZmanim.haneitz;
+  }
+  
+  if(now>MyZmanim.haneitz){
+    current_zman_name=3;
+    current_zman=MyZmanim.shma_gra;
+  }
+  
+  if(now>MyZmanim.shma_gra){
+    current_zman_name=4;
+    current_zman=MyZmanim.tefila_gra;
+  }
+  
+  if(now>MyZmanim.tefila_gra){
+    current_zman_name=5;
+    current_zman=MyZmanim.chatzos;
+  }
+  
+  if(now>MyZmanim.chatzos){
+    current_zman_name=6;
+    current_zman=MyZmanim.mincha_gedloa;
+  }
+  
+  if(now>MyZmanim.mincha_gedloa){
+    current_zman_name=7;
+    current_zman=MyZmanim.shkiya;
+  }
+  
+  if(now>MyZmanim.shkiya){
+    current_zman_name=8;
+    current_zman=MyZmanim.tzais;
+  }
+  
+  if(now>MyZmanim.tzais){
+    current_zman_name=9;
+    current_zman=MyZmanim.tzais_rt;
+  }
+  
+  if(now>MyZmanim.tzais_rt){
+    current_zman_name=10;
+    current_zman=MyZmanim.chatzos_halaila;
+  }
+}
+
+static void update_zman_layer(){
+  refresh_current_zman();
+
+  text_layer_set_text(s_zmanlabel_label, zman_names[current_zman_name]);
+  struct tm *zmanT = localtime(&current_zman);
+  strftime(s_zmantime_buffer, sizeof(s_zmantime_buffer), "%l:%M", zmanT);
+  text_layer_set_text(s_zmantime_label, s_zmantime_buffer);
+}
+
+static void recalculate_zmanim(){
+  time_t now = time(NULL);
+  struct tm *time = localtime(&now);
+   
+  calcZmanim(&MyZmanim, time->tm_year, time->tm_mon+1, time->tm_mday, latitude, longitude);
+    
+  update_zman_layer();
+}
+
 static void date_update_proc(Layer *layer, GContext *ctx) {
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
-
-  //draw zman time 
-  int i = 0;
-  while(zmanim[i]<now){
-    i++;
-    if(i==11){
-      i=10;
-      break;
-    }
-  }
-
-  text_layer_set_text(s_zmanlabel_label, zman_names[i]);
-  struct tm *zmanT = localtime(&zmanim[i]);
-  strftime(s_zmantime_buffer, sizeof(s_zmantime_buffer), "%l:%M", zmanT);
-  text_layer_set_text(s_zmantime_label, s_zmantime_buffer);
 
   //draw gregdate
   strftime(s_num_buffer, sizeof(s_num_buffer), "%e", t);
@@ -102,11 +215,13 @@ static void date_update_proc(Layer *layer, GContext *ctx) {
 
 static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   layer_mark_dirty(window_get_root_layer(s_window));  
+  if ((units_changed & MINUTE_UNIT) != 0) {
+    //re-draw zmanim layer every minute
+    update_zman_layer();
+  }
   if ((units_changed & HOUR_UNIT) != 0) {
-    //try to refresh zmanim every hour
-    const int inbox_size = 372;
-    const int outbox_size = 32;
-    app_message_open(inbox_size, outbox_size);    
+    //recalculate zmanim every hour
+    recalculate_zmanim();
   }
 }
 
@@ -189,31 +304,19 @@ static void window_unload(Window *window) {
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
   // Read tuples for data
-  static Tuple* tuples[11];
-  tuples[0] = dict_find(iterator, MESSAGE_KEY_ALOS);
-  tuples[1] = dict_find(iterator, MESSAGE_KEY_MISHEYAKIR);
-  tuples[2] = dict_find(iterator, MESSAGE_KEY_NEITZ);
-  tuples[3] = dict_find(iterator, MESSAGE_KEY_SHMA_GRA);
-  tuples[4] = dict_find(iterator, MESSAGE_KEY_TEFILA_GRA);
-  tuples[5] = dict_find(iterator, MESSAGE_KEY_CHATZOS);
-  tuples[6] = dict_find(iterator, MESSAGE_KEY_MINCHA_GEDOLA);
-  tuples[7] = dict_find(iterator, MESSAGE_KEY_SHKIA);
-  tuples[8] = dict_find(iterator, MESSAGE_KEY_TZAIS);
-  tuples[9] = dict_find(iterator, MESSAGE_KEY_TZAIS_RT);
-tuples[10] = dict_find(iterator, MESSAGE_KEY_CHATZOS_LAILA);
-
-  for(int i = 0 ; i<11 ; i++){
-    uint8_t *data = tuples[i]->value->data;
-    //   snprintf(s_zmantime_buffer, sizeof(s_zmantime_buffer), "%d:%d", (int)data[0],(int)data[1]);
-    time_t day_start = time_start_of_today();
-    day_start += data[0]*60*60;
-    day_start += data[1]*60;
-    zmanim[i]=day_start;
-    struct tm *t = localtime(&day_start);
-    strftime(s_zmantime_buffer, sizeof(s_zmantime_buffer), "%l:%M", t);
-  }
+  Tuple* lat_tup = dict_find(iterator, MESSAGE_KEY_LATITUDE);
+  Tuple* long_tup = dict_find(iterator, MESSAGE_KEY_LONGITUDE);
+  char *lat_str = lat_tup->value->cstring;
+  char *long_str = long_tup->value->cstring;
+ 
+  persist_write_string(LAT_KEY, lat_str);
+  persist_write_string(LONG_KEY, long_str);
+  
+  longitude = str_to_double(long_str);
+  latitude = str_to_double(lat_str);
+  
+  recalculate_zmanim();
 }
-
 
 static void init() {
   s_window = window_create();
@@ -225,8 +328,6 @@ static void init() {
 
   s_day_buffer[0] = '\0';
   s_num_buffer[0] = '\0';
-
-
 
   // init hand paths
   s_minute_arrow = gpath_create(&MINUTE_HAND_POINTS);
@@ -245,6 +346,18 @@ static void init() {
   tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
 
   app_message_register_inbox_received(inbox_received_callback);
+  
+   char lat_str [9];
+  char lng_str [9];
+  int lat_result = persist_read_string(LAT_KEY, lat_str,  sizeof(lat_str));
+  int long_result = persist_read_string(LONG_KEY, lng_str, sizeof(lng_str));
+  
+  if(lat_result!=E_DOES_NOT_EXIST && long_result!=E_DOES_NOT_EXIST ){
+    longitude = str_to_double(lng_str);
+  latitude = str_to_double(lat_str);
+     recalculate_zmanim();
+  }
+  
   // Open AppMessage
   const int inbox_size = 372;
   const int outbox_size = 32;

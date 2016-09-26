@@ -1,4 +1,5 @@
 var suncalc = require('suncalc');
+
 require("date-format-lite");
 suncalc.addTime(-16.1, 'alot_hashachar', 0);
 suncalc.addTime(-11.5, 'misheyakir', 0);
@@ -8,9 +9,10 @@ function locationSuccess(pos) {
   // We will request the weather here
   var lat = pos.coords.latitude;
   var long = pos.coords.longitude;
+  
   var today = new Date();
   var sunTimes = suncalc.getTimes( today,  lat, long);
-
+  
   var sunset = sunTimes.sunset;
   var sunrise = sunTimes.sunrise;
   var zhour = (sunset-sunrise) / 12;
@@ -28,8 +30,13 @@ function locationSuccess(pos) {
     'CHATZOS_LAILA' : new Date(sunrise.getTime()+(zhour*6) + 12*60*60*1000)
   };
 
-  var sendDictionary ={};
   
+
+  var sendDictionary={
+    'LONGITUDE':long.toString(),
+    'LATITUDE': lat.toString()
+  };
+
   for (var key in halachicTimes) {
     if (halachicTimes.hasOwnProperty(key)) {
       var zman = halachicTimes[key];
@@ -38,22 +45,22 @@ function locationSuccess(pos) {
   }
 
 
-//  Send to Pebble
-    Pebble.sendAppMessage(sendDictionary,
-                          function(e) {
-                            console.log('Zmanim sent to Pebble successfully!');
-                          },
-                          function(e) {
-                            console.log('Error sending zmanim info to Pebble!');
-                          }
+  //  Send to Pebble
+  Pebble.sendAppMessage(sendDictionary,
+                        function(e) {
+                          console.log('Zmanim sent to Pebble successfully!');
+                        },
+                        function(e) {
+                          console.log('Error sending zmanim info to Pebble!');
+                        }
 
+                       );
+  Pebble.addEventListener('appmessage',
+                          function(e) {
+                            console.log('AppMessage received!');
+                            getWeather();
+                          }                     
                          );
-    Pebble.addEventListener('appmessage',
-                            function(e) {
-                              console.log('AppMessage received!');
-                              getWeather();
-                            }                     
-                           );
 }
 
 function locationError(err) {
@@ -72,8 +79,12 @@ function getWeather() {
 Pebble.addEventListener('ready', 
                         function(e) {
                           console.log('PebbleKit JS ready!');
-
-                          // Get the initial weather
+                          getWeather();
+                        }
+                       );
+Pebble.addEventListener('appmessage', 
+                        function(e) {
+                          console.log('PebbleKit JS ready!');
                           getWeather();
                         }
                        );

@@ -2,6 +2,7 @@
     "author": "Beezy Works Studios",
     "dependencies": {
         "date-format-lite": "^0.9.0",
+        "pebble-math-sll": "^1.19.1",
         "suncalc": "^1.7.0"
     },
     "keywords": [],
@@ -23,7 +24,10 @@
             "SHKIA",
             "TZAIS",
             "TZAIS_RT",
-            "CHATZOS_LAILA"
+            "CHATZOS_LAILA",
+            "LATITUDE",
+            "LONGITUDE",
+            "ALTITUDE"
         ],
         "projectType": "native",
         "resources": {
@@ -42,10 +46,10 @@
             "basalt",
             "chalk"
         ],
-        "uuid": "e18a80f6-2d1a-43fe-a295-71e816779f90",
+        "uuid": "dca987a2-ce2a-4f81-9033-da903643c8bf",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "1.0.0"
+    "version": "1.1.0"
 }

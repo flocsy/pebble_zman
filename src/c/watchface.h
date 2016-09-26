@@ -3,8 +3,12 @@
 #include "pebble.h"
 
 #define NUM_CLOCK_TICKS 11
+#define NUM_ZMANIM 11
 
-const char *zman_names[11] = {"רחשה תולע",
+const int LAT_KEY=35;
+const int LONG_KEY=36;
+
+const char *zman_names[NUM_ZMANIM] = {"רחשה תולע",
                              "ריכישמ",
                              "המחה ץנה",
                              "א''רג עמש", 
