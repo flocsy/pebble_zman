@@ -122,6 +122,31 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_circle(ctx, center, radius);
 }
 
+static void update_hebrew_date(){
+  time_t now = time(NULL);
+  struct tm *t = localtime(&now);
+   if(now>MyZmanim.shkiya){
+    t->tm_mday+=1;
+  }
+  
+  //draw hebdate
+  int julianDay = hdate_gdate_to_jd(t->tm_mday, t->tm_mon + 1, t->tm_year + 1900);
+  //Convert julian day to hebrew date
+  int hDay, hMonth, hYear, hDayTishrey, hNextTishrey;
+  hdate_jd_to_hdate(julianDay, &hDay, &hMonth, &hYear, &hDayTishrey, &hNextTishrey);
+  text_layer_set_text(s_hebday_label, hebrewNumbers[hDay-1]);
+}
+
+static void date_update_proc(Layer *layer, GContext *ctx) {
+  time_t now = time(NULL);
+  struct tm *t = localtime(&now);
+
+  //draw gregdate
+  strftime(s_num_buffer, sizeof(s_num_buffer), "%e", t);
+  text_layer_set_text(s_gregday_label, s_num_buffer);
+
+  update_hebrew_date(); 
+}
 
 static void refresh_current_zman(){
   current_zman = MyZmanim.alos;
@@ -166,6 +191,7 @@ static void refresh_current_zman(){
   if(now>MyZmanim.shkiya){
     current_zman_name=8;
     current_zman=MyZmanim.tzais;
+    update_hebrew_date();
   }
   
   if(now>MyZmanim.tzais){
@@ -195,22 +221,6 @@ static void recalculate_zmanim(){
   calcZmanim(&MyZmanim, time->tm_year, time->tm_mon+1, time->tm_mday, latitude, longitude);
     
   update_zman_layer();
-}
-
-static void date_update_proc(Layer *layer, GContext *ctx) {
-  time_t now = time(NULL);
-  struct tm *t = localtime(&now);
-
-  //draw gregdate
-  strftime(s_num_buffer, sizeof(s_num_buffer), "%e", t);
-  text_layer_set_text(s_gregday_label, s_num_buffer);
-
-  //draw hebdate
-  int julianDay = hdate_gdate_to_jd(t->tm_mday, t->tm_mon + 1, t->tm_year + 1900);
-  //Convert julian day to hebrew date
-  int hDay, hMonth, hYear, hDayTishrey, hNextTishrey;
-  hdate_jd_to_hdate(julianDay, &hDay, &hMonth, &hYear, &hDayTishrey, &hNextTishrey);
-  text_layer_set_text(s_hebday_label, hebrewNumbers[hDay-1]);
 }
 
 static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {

@@ -1,10 +1,6 @@
 {
     "author": "Beezy Works Studios",
-    "dependencies": {
-        "date-format-lite": "^0.9.0",
-        "pebble-math-sll": "^1.19.1",
-        "suncalc": "^1.7.0"
-    },
+    "dependencies": {},
     "keywords": [],
     "name": "zmanwatchface",
     "pebble": {
@@ -14,17 +10,6 @@
         "displayName": "Hebrew Times Analog",
         "enableMultiJS": true,
         "messageKeys": [
-            "ALOS",
-            "MISHEYAKIR",
-            "NEITZ",
-            "SHMA_GRA",
-            "TEFILA_GRA",
-            "CHATZOS",
-            "MINCHA_GEDOLA",
-            "SHKIA",
-            "TZAIS",
-            "TZAIS_RT",
-            "CHATZOS_LAILA",
             "LATITUDE",
             "LONGITUDE",
             "ALTITUDE"
@@ -44,7 +29,8 @@
         "targetPlatforms": [
             "aplite",
             "basalt",
-            "chalk"
+            "chalk",
+            "diorite"
         ],
         "uuid": "dca987a2-ce2a-4f81-9033-da903643c8bf",
         "watchapp": {
