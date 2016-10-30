@@ -1,18 +1,22 @@
 {
     "author": "Beezy Works Studios",
-    "dependencies": {},
+    "dependencies": {
+        "pebble-clay": "^1.0.3"
+    },
     "keywords": [],
     "name": "zmanwatchface",
     "pebble": {
         "capabilities": [
-            "location"
+            "location",
+            "configurable"
         ],
         "displayName": "Hebrew Times Analog",
         "enableMultiJS": true,
         "messageKeys": [
             "LATITUDE",
             "LONGITUDE",
-            "ALTITUDE"
+            "ALTITUDE",
+            "ENABLE_RTLTR"
         ],
         "projectType": "native",
         "resources": {

@@ -8,7 +8,7 @@
 const int LAT_KEY=35;
 const int LONG_KEY=36;
 
-const char *zman_names[NUM_ZMANIM] = {"רחשה תולע",
+char *zman_names[NUM_ZMANIM] = {"רחשה תולע",
                              "ריכישמ",
                              "המחה ץנה",
                              "א''רג עמש", 

@@ -105,6 +105,8 @@ if (timezoneoffset < -SECONDS_IN_WEEK/2) timezoneoffset += SECONDS_IN_WEEK;
 
 void calcZmanim(struct Zmanim* out_zmanim, int year, int month, int day, float latitude, float longitude)
 {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "calcZmanim");
+
   float sunrise = calcSunRise( year,  month,  day,  latitude,  longitude,  90.5f);
   float sunset =  calcSunSet( year,  month,  day,  latitude,  longitude,  90.5f);
   float alos = calcSunRise( year,  month,  day,  latitude,  longitude,  106.6f);
