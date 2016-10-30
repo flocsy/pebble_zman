@@ -3,7 +3,7 @@
 #include "pebble.h"
 #include "hebrewdate.h"
 #include "zman_calculator.h"
-
+#include "pebble-rtltr/rtltr.h"
 
 int isdigit(int c)
 {
@@ -125,7 +125,7 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
 static void update_hebrew_date(){
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
-   if(now>MyZmanim.shkiya){
+  if(now>MyZmanim.shkiya){
     t->tm_mday+=1;
   }
   
@@ -316,16 +316,46 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   // Read tuples for data
   Tuple* lat_tup = dict_find(iterator, MESSAGE_KEY_LATITUDE);
   Tuple* long_tup = dict_find(iterator, MESSAGE_KEY_LONGITUDE);
-  char *lat_str = lat_tup->value->cstring;
-  char *long_str = long_tup->value->cstring;
- 
-  persist_write_string(LAT_KEY, lat_str);
-  persist_write_string(LONG_KEY, long_str);
-  
-  longitude = str_to_double(long_str);
-  latitude = str_to_double(lat_str);
-  
-  recalculate_zmanim();
+  if (lat_tup && long_tup) {
+    char *lat_str = lat_tup->value->cstring;
+    char *long_str = long_tup->value->cstring;
+   
+    if (lat_str && long_str) {
+      persist_write_string(LAT_KEY, lat_str);
+      persist_write_string(LONG_KEY, long_str);
+      
+      longitude = str_to_double(long_str);
+      latitude = str_to_double(lat_str);
+      
+      recalculate_zmanim();
+    }
+  }
+
+  rtltr_inbox_received_handler(iterator, context);
+}
+
+void update_hebrew_layers() {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "update_hebrew_layers");
+  update_hebrew_date();
+  update_zman_layer();
+}
+
+void init_rtltr(void) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:0");
+  // Open AppMessage connection
+//  app_message_register_inbox_received(rtltr_inbox_received_handler);
+//  app_message_open(128, 128);
+
+  rtltr_ensure_registered_string_arrays_capacity(2);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:1");
+  rtltr_register_string_array(zman_names, NUM_ZMANIM);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:2");
+  rtltr_register_string_array(hebrewNumbers, 30);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:3");
+  rtltr_register_callback_after_reverse_registered_strings(update_hebrew_layers);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:4");
+  rtltr_load_settings();
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:5");
 }
 
 static void init() {
@@ -357,21 +387,23 @@ static void init() {
 
   app_message_register_inbox_received(inbox_received_callback);
   
-   char lat_str [9];
+  char lat_str [9];
   char lng_str [9];
   int lat_result = persist_read_string(LAT_KEY, lat_str,  sizeof(lat_str));
   int long_result = persist_read_string(LONG_KEY, lng_str, sizeof(lng_str));
   
   if(lat_result!=E_DOES_NOT_EXIST && long_result!=E_DOES_NOT_EXIST ){
     longitude = str_to_double(lng_str);
-  latitude = str_to_double(lat_str);
-     recalculate_zmanim();
+    latitude = str_to_double(lat_str);
+    recalculate_zmanim();
   }
   
   // Open AppMessage
   const int inbox_size = 372;
   const int outbox_size = 32;
   app_message_open(inbox_size, outbox_size);
+
+  init_rtltr();
 }
 
 static void deinit() {
