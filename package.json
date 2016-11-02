@@ -1,8 +1,5 @@
 {
     "author": "Beezy Works Studios",
-    "contributors": [
-        "Gavriel Fleischer <flocsy@gmail.com> (http://neswork.com)"
-    ],
     "dependencies": {
         "pebble-clay": "^1.0.3",
         "pebble-rtltr": "^0.2.0",

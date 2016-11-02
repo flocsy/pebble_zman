@@ -335,27 +335,16 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 }
 
 void update_hebrew_layers() {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "update_hebrew_layers");
   update_hebrew_date();
   update_zman_layer();
 }
 
 void init_rtltr(void) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:0");
-  // Open AppMessage connection
-//  app_message_register_inbox_received(rtltr_inbox_received_handler);
-//  app_message_open(128, 128);
-
   rtltr_ensure_registered_string_arrays_capacity(2);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:1");
   rtltr_register_string_array(zman_names, NUM_ZMANIM);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:2");
   rtltr_register_string_array(hebrewNumbers, 30);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:3");
   rtltr_register_callback_after_reverse_registered_strings(update_hebrew_layers);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:4");
   rtltr_load_settings();
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "init_rtltr:5");
 }
 
 static void init() {
