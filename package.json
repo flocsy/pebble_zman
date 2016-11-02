@@ -1,8 +1,11 @@
 {
     "author": "Beezy Works Studios",
+    "contributors": [
+        "Gavriel Fleischer <flocsy@gmail.com> (http://neswork.com)"
+    ],
     "dependencies": {
         "pebble-clay": "^1.0.3",
-        "pebble-rtltr": "^0.1.1",
+        "pebble-rtltr": "^0.2.0",
         "pebblepackage-4": "https://builds.cloudpebble.net/19ea29c7-bf2b-4d66-b842-32da7abf11f5/package.tar.gz"
     },
     "keywords": [],
@@ -42,5 +45,5 @@
             "watchface": true
         }
     },
-    "version": "1.1.0"
+    "version": "1.2.0"
 }
