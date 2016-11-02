@@ -274,8 +274,9 @@ static void window_load(Window *window) {
 
   //create hebday layer
   s_hebday_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(143, 68, 20, 20),
-    GRect(115, 62, 20, 20)));
+    GRect(130, 68, 20, 20),
+    GRect(110, 62, 20, 20)));
+  text_layer_set_text_alignment(s_hebday_label, GTextAlignmentRight);
   text_layer_set_text(s_hebday_label, s_hebday_buffer);
   text_layer_set_background_color(s_hebday_label, GColorBlack);
   text_layer_set_text_color(s_hebday_label, GColorWhite);
@@ -285,8 +286,9 @@ static void window_load(Window *window) {
 
   //create gregday layer
   s_gregday_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(143, 88, 20, 20),
-    GRect(115, 82, 20, 20)));
+    GRect(130, 88, 20, 20),
+    GRect(110, 82, 20, 20)));
+  text_layer_set_text_alignment(s_gregday_label, GTextAlignmentRight);
   text_layer_set_text(s_gregday_label, s_hebday_buffer);
   text_layer_set_background_color(s_gregday_label, GColorBlack);
   text_layer_set_text_color(s_gregday_label, GColorWhite);
