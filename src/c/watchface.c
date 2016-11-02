@@ -251,7 +251,7 @@ static void window_load(Window *window) {
 
   //create zman title layer
   s_zmanlabel_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(20, 110, 110, 20),
+    GRect(38, 110, 110, 20),
     GRect(20, 110, 110, 20)));
   text_layer_set_text(s_zmanlabel_label, s_day_buffer);
   text_layer_set_background_color(s_zmanlabel_label, GColorClear);
@@ -263,7 +263,7 @@ static void window_load(Window *window) {
 
   //create zman time layer
   s_zmantime_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(55, 130, 80, 20),
+    GRect(73, 130, 80, 20),
     GRect(55, 130, 80, 20)));
   text_layer_set_text(s_zmantime_label, s_num_buffer);
   text_layer_set_background_color(s_zmantime_label, GColorBlack);
@@ -274,8 +274,8 @@ static void window_load(Window *window) {
 
   //create hebday layer
   s_hebday_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(90, 114, 18, 20),
-    GRect(125, 60, 20, 20)));
+    GRect(143, 68, 20, 20),
+    GRect(115, 62, 20, 20)));
   text_layer_set_text(s_hebday_label, s_hebday_buffer);
   text_layer_set_background_color(s_hebday_label, GColorBlack);
   text_layer_set_text_color(s_hebday_label, GColorWhite);
@@ -285,8 +285,8 @@ static void window_load(Window *window) {
 
   //create gregday layer
   s_gregday_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(90, 114, 18, 20),
-    GRect(125, 80, 20, 20)));
+    GRect(143, 88, 20, 20),
+    GRect(115, 82, 20, 20)));
   text_layer_set_text(s_gregday_label, s_hebday_buffer);
   text_layer_set_background_color(s_gregday_label, GColorBlack);
   text_layer_set_text_color(s_gregday_label, GColorWhite);
