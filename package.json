@@ -23,6 +23,7 @@
         "resources": {
             "media": [
                 {
+                    "characterRegex": "[\u05d0-\u05ea\"' ]",
                     "file": "fonts/TaameyFrankCLM.ttf",
                     "name": "FONT_TAAMEI_FRANK_18",
                     "targetPlatforms": null,
