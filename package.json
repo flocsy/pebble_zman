@@ -1,11 +1,16 @@
 {
     "author": "Beezy Works Studios",
-    "dependencies": {},
+    "dependencies": {
+        "pebble-clay": "^1.0.3",
+        "pebble-rtltr": "^0.2.0",
+        "pebblepackage-4": "https://builds.cloudpebble.net/19ea29c7-bf2b-4d66-b842-32da7abf11f5/package.tar.gz"
+    },
     "keywords": [],
     "name": "zmanwatchface",
     "pebble": {
         "capabilities": [
-            "location"
+            "location",
+            "configurable"
         ],
         "displayName": "Hebrew Times Analog",
         "enableMultiJS": true,
@@ -30,12 +35,13 @@
             "aplite",
             "basalt",
             "chalk",
-            "diorite"
+            "diorite",
+            "emery"
         ],
         "uuid": "dca987a2-ce2a-4f81-9033-da903643c8bf",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "1.1.0"
+    "version": "1.2.0"
 }

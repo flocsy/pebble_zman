@@ -3,7 +3,7 @@
 #include "pebble.h"
 #include "hebrewdate.h"
 #include "zman_calculator.h"
-
+#include "pebble-rtltr/rtltr.h"
 
 int isdigit(int c)
 {
@@ -52,6 +52,8 @@ double str_to_double(char *s)
 }
 
 static Window *s_window;
+static int x_offset = 0;
+static int y_offset = 0;
 static Layer *s_simple_bg_layer, *s_date_layer, *s_hands_layer;
 static TextLayer *s_zmanlabel_label, *s_zmantime_label, *s_hebday_label, *s_gregday_label;
 
@@ -73,8 +75,6 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
   graphics_context_set_fill_color(ctx, GColorWhite);
   for (int i = 0; i < NUM_CLOCK_TICKS; ++i) {
-    const int x_offset = PBL_IF_ROUND_ELSE(18, 0);
-    const int y_offset = PBL_IF_ROUND_ELSE(6, 0);
     gpath_move_to(s_tick_paths[i], GPoint(x_offset, y_offset));
     gpath_draw_filled(ctx, s_tick_paths[i]);
   }
@@ -84,7 +84,7 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   GPoint center = grect_center_point(&bounds);
 
-  const int16_t second_hand_length = PBL_IF_ROUND_ELSE((bounds.size.w / 2) - 19, bounds.size.w / 2);
+  const int16_t second_hand_length = 71;
 
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
@@ -125,7 +125,7 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
 static void update_hebrew_date(){
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
-   if(now>MyZmanim.shkiya){
+  if(now>MyZmanim.shkiya){
     t->tm_mday+=1;
   }
   
@@ -238,7 +238,15 @@ static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
 
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
-  GRect bounds = layer_get_bounds(window_layer);
+  const GRect bounds = layer_get_bounds(window_layer);
+  const GPoint center = grect_center_point(&bounds);
+  x_offset = center.x-72; //+ PBL_IF_ROUND_ELSE(18, 0);
+  y_offset = center.y-84; //+ PBL_IF_ROUND_ELSE(6, 0);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "window_load: cx:%d, cy:%d ox:%d, oy:%d", center.x, center.y, x_offset, y_offset);
+//aplite: bg_update_proc: cx:72, cy:84 ox:0, oy:0
+//chalk: bg_update_proc: cx:90, cy:90 ox:18, oy:6
+//emery: bg_update_proc: cx:100, cy:114 ox:28, oy:30
+
   s_zmanlabel_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TAAMEI_FRANK_18));
 
   s_simple_bg_layer = layer_create(bounds);
@@ -250,9 +258,7 @@ static void window_load(Window *window) {
   layer_add_child(window_layer, s_date_layer);
 
   //create zman title layer
-  s_zmanlabel_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(20, 110, 110, 20),
-    GRect(20, 110, 110, 20)));
+  s_zmanlabel_label = text_layer_create(GRect(x_offset + 20, y_offset + 110, 110, 20));
   text_layer_set_text(s_zmanlabel_label, s_day_buffer);
   text_layer_set_background_color(s_zmanlabel_label, GColorClear);
   text_layer_set_text_color(s_zmanlabel_label, GColorWhite);
@@ -262,20 +268,18 @@ static void window_load(Window *window) {
   layer_add_child(s_date_layer, text_layer_get_layer(s_zmanlabel_label));
 
   //create zman time layer
-  s_zmantime_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(55, 130, 80, 20),
-    GRect(55, 130, 80, 20)));
+  s_zmantime_label = text_layer_create(GRect(x_offset + 52, y_offset + 130, 40, 20));
   text_layer_set_text(s_zmantime_label, s_num_buffer);
   text_layer_set_background_color(s_zmantime_label, GColorBlack);
   text_layer_set_text_color(s_zmantime_label, GColorWhite);
   text_layer_set_font(s_zmantime_label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_text_alignment(s_zmantime_label, GTextAlignmentCenter);
   //add to date layer
   layer_add_child(s_date_layer, text_layer_get_layer(s_zmantime_label));
 
   //create hebday layer
-  s_hebday_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(90, 114, 18, 20),
-    GRect(125, 60, 20, 20)));
+  s_hebday_label = text_layer_create(GRect(x_offset + 110, y_offset + 62, 20, 20));
+  text_layer_set_text_alignment(s_hebday_label, GTextAlignmentRight);
   text_layer_set_text(s_hebday_label, s_hebday_buffer);
   text_layer_set_background_color(s_hebday_label, GColorBlack);
   text_layer_set_text_color(s_hebday_label, GColorWhite);
@@ -284,9 +288,8 @@ static void window_load(Window *window) {
   layer_add_child(s_date_layer, text_layer_get_layer(s_hebday_label));
 
   //create gregday layer
-  s_gregday_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(90, 114, 18, 20),
-    GRect(125, 80, 20, 20)));
+  s_gregday_label = text_layer_create(GRect(x_offset + 110, y_offset + 82, 20, 20));
+  text_layer_set_text_alignment(s_gregday_label, GTextAlignmentRight);
   text_layer_set_text(s_gregday_label, s_hebday_buffer);
   text_layer_set_background_color(s_gregday_label, GColorBlack);
   text_layer_set_text_color(s_gregday_label, GColorWhite);
@@ -316,16 +319,35 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   // Read tuples for data
   Tuple* lat_tup = dict_find(iterator, MESSAGE_KEY_LATITUDE);
   Tuple* long_tup = dict_find(iterator, MESSAGE_KEY_LONGITUDE);
-  char *lat_str = lat_tup->value->cstring;
-  char *long_str = long_tup->value->cstring;
- 
-  persist_write_string(LAT_KEY, lat_str);
-  persist_write_string(LONG_KEY, long_str);
-  
-  longitude = str_to_double(long_str);
-  latitude = str_to_double(lat_str);
-  
-  recalculate_zmanim();
+  if (lat_tup && long_tup) {
+    char *lat_str = lat_tup->value->cstring;
+    char *long_str = long_tup->value->cstring;
+   
+    if (lat_str && long_str) {
+      persist_write_string(LAT_KEY, lat_str);
+      persist_write_string(LONG_KEY, long_str);
+      
+      longitude = str_to_double(long_str);
+      latitude = str_to_double(lat_str);
+      
+      recalculate_zmanim();
+    }
+  }
+
+  rtltr_inbox_received_handler(iterator, context);
+}
+
+void update_hebrew_layers() {
+  update_hebrew_date();
+  update_zman_layer();
+}
+
+void init_rtltr(void) {
+  rtltr_ensure_registered_string_arrays_capacity(2);
+  rtltr_register_string_array(zman_names, NUM_ZMANIM);
+  rtltr_register_string_array(hebrewNumbers, 30);
+  rtltr_register_callback_after_reverse_registered_strings(update_hebrew_layers);
+  rtltr_load_settings();
 }
 
 static void init() {
@@ -357,21 +379,23 @@ static void init() {
 
   app_message_register_inbox_received(inbox_received_callback);
   
-   char lat_str [9];
+  char lat_str [9];
   char lng_str [9];
   int lat_result = persist_read_string(LAT_KEY, lat_str,  sizeof(lat_str));
   int long_result = persist_read_string(LONG_KEY, lng_str, sizeof(lng_str));
   
   if(lat_result!=E_DOES_NOT_EXIST && long_result!=E_DOES_NOT_EXIST ){
     longitude = str_to_double(lng_str);
-  latitude = str_to_double(lat_str);
-     recalculate_zmanim();
+    latitude = str_to_double(lat_str);
+    recalculate_zmanim();
   }
   
   // Open AppMessage
   const int inbox_size = 372;
   const int outbox_size = 32;
   app_message_open(inbox_size, outbox_size);
+
+  init_rtltr();
 }
 
 static void deinit() {
