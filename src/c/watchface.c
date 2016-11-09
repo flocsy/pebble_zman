@@ -1,6 +1,6 @@
-#include "watchface.h"
+#include <pebble.h>
 
-#include "pebble.h"
+#include "watchface_data.h"
 #include "hebrewdate.h"
 #include "zman_calculator.h"
 #include "pebble-rtltr/rtltr.h"
@@ -240,12 +240,8 @@ static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   const GRect bounds = layer_get_bounds(window_layer);
   const GPoint center = grect_center_point(&bounds);
-  x_offset = center.x-72; //+ PBL_IF_ROUND_ELSE(18, 0);
-  y_offset = center.y-84; //+ PBL_IF_ROUND_ELSE(6, 0);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "window_load: cx:%d, cy:%d ox:%d, oy:%d", center.x, center.y, x_offset, y_offset);
-//aplite: bg_update_proc: cx:72, cy:84 ox:0, oy:0
-//chalk: bg_update_proc: cx:90, cy:90 ox:18, oy:6
-//emery: bg_update_proc: cx:100, cy:114 ox:28, oy:30
+  x_offset = center.x-72;
+  y_offset = center.y-84;
 
   s_zmanlabel_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TAAMEI_FRANK_18));
 
@@ -344,9 +340,10 @@ void update_hebrew_layers() {
 
 void init_rtltr(void) {
   rtltr_ensure_registered_string_arrays_capacity(2);
-  rtltr_register_string_array(zman_names, NUM_ZMANIM);
-  rtltr_register_string_array(hebrewNumbers, 30);
+  rtltr_register_char_matrix((char* const *)zman_names, NUM_ZMANIM, 20);
+  rtltr_register_char_matrix((char* const *)hebrewNumbers, 30, 6);
   rtltr_register_callback_after_reverse_registered_strings(update_hebrew_layers);
+  rtltr_strings_are_visual_encoded();
   rtltr_load_settings();
 }
 
@@ -399,6 +396,8 @@ static void init() {
 }
 
 static void deinit() {
+  rtltr_free();
+
   gpath_destroy(s_minute_arrow);
   gpath_destroy(s_hour_arrow);
 

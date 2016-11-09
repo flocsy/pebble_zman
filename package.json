@@ -2,7 +2,7 @@
     "author": "Beezy Works Studios",
     "dependencies": {
         "pebble-clay": "^1.0.3",
-        "pebble-rtltr": "^0.2.0",
+        "pebble-rtltr": "^0.3.2",
         "pebblepackage-4": "https://builds.cloudpebble.net/19ea29c7-bf2b-4d66-b842-32da7abf11f5/package.tar.gz"
     },
     "keywords": [],
@@ -43,5 +43,5 @@
             "watchface": true
         }
     },
-    "version": "1.2.0"
+    "version": "1.3.0"
 }
