@@ -5,7 +5,7 @@
   * See: app.js
   * This is a simple configuration with 1 toggle to enable/disable RTLTR.
   *
-  * IMPORTANT: You need to keep the `"messageKey": "ENABLE_RTLTR"` to work. All the rest can be changed.
+  * IMPORTANT: You need to keep the `"messageKey": "RTLTR_OVERRIDE"` to work. All the rest can be changed.
   */
 
 module.exports = [
@@ -22,12 +22,12 @@ module.exports = [
       },
       {
         "type": "text",
-        "defaultValue": "RTLTR: If you use the app/watchface on a RTL enabled firmware (like https://elbbeP.cpfx.ca/) enable RTLTR to display the Hebrew/Arabic texts in the correct direction."
+        "defaultValue": "Override RTLTR if Hebrew texts are displayed in the incorrect direction."
       },
       {
         "type": "toggle",
-        "messageKey": "ENABLE_RTLTR",
-        "label": "Enable RTLTR",
+        "messageKey": "RTLTR_OVERRIDE",
+        "label": "Override RTLTR",
         "defaultValue": false
       }
     ]

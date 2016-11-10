@@ -84,19 +84,26 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   GPoint center = grect_center_point(&bounds);
 
-  const int16_t second_hand_length = 71;
+  const int16_t second_hand_length = 71, second_tail_length = -12;
 
   time_t now = time(NULL);
+
+  // Comment in next lines to take schreenshots
+  // now = 1286698230; // 10:10:30 timestamp for "display" to take screenshots from cloudpebble
+  // #if defined(PBL_PLATFORM_APLITE)
+  // now += 7200; // aplite should be in local time
+  // #endif
+
   struct tm *t = localtime(&now);
   int32_t second_angle = TRIG_MAX_ANGLE * t->tm_sec / 60;
   GPoint second_hand = {
     .x = (int16_t)(sin_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.x,
     .y = (int16_t)(-cos_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.y,
   };
-
-  // second hand
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_draw_line(ctx, second_hand, center);
+  GPoint second_tail = {
+    .x = (int16_t)(sin_lookup(second_angle) * (int32_t)second_tail_length / TRIG_MAX_RATIO) + center.x,
+    .y = (int16_t)(-cos_lookup(second_angle) * (int32_t)second_tail_length / TRIG_MAX_RATIO) + center.y,
+  };
 
   // minute/hour hand
   graphics_context_set_fill_color(ctx, GColorWhite);
@@ -110,16 +117,20 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   gpath_draw_filled(ctx, s_hour_arrow);
   gpath_draw_outline(ctx, s_hour_arrow);
 
+  //draw a circle
+  uint16_t radius = 3;
+  graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorRed, GColorWhite));
+  graphics_fill_circle(ctx, center, radius);
+//   graphics_context_set_stroke_color(ctx, GColorBlack);
+//   graphics_draw_circle(ctx, center, radius);
+
+  // second hand
+  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorRed, GColorWhite));
+  graphics_draw_line(ctx, second_hand, second_tail);
+
   // dot in the middle
   graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_fill_rect(ctx, GRect(bounds.size.w / 2 - 1, bounds.size.h / 2 - 1, 3, 3), 0, GCornerNone);
-
-  //draw a circle
-  uint16_t radius = 5;
-  graphics_context_set_fill_color(ctx, GColorWhite);
-  graphics_fill_circle(ctx, center, radius);
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-  graphics_draw_circle(ctx, center, radius);
+  graphics_fill_circle(ctx, center, 1);
 }
 
 static void update_hebrew_date(){
