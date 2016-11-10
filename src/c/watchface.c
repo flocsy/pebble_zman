@@ -5,6 +5,10 @@
 #include "zman_calculator.h"
 #include "pebble-rtltr/rtltr.h"
 
+#define LAT_KEY 35
+#define LONG_KEY 36
+#define SECONDS_KEY 37
+
 int isdigit(int c)
 {
   return (c >= '0' && c <= '9' ? 1 : 0);
@@ -60,6 +64,7 @@ static TextLayer *s_zmanlabel_label, *s_zmantime_label, *s_hebday_label, *s_greg
 static GPath *s_tick_paths[NUM_CLOCK_TICKS];
 static GPath *s_minute_arrow, *s_hour_arrow;
 static char s_num_buffer[4], s_day_buffer[6], s_hebday_buffer[3], s_zmantime_buffer[6];
+static bool show_seconds = true;
 
 static GFont s_zmanlabel_font;
 
@@ -95,15 +100,6 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   // #endif
 
   struct tm *t = localtime(&now);
-  int32_t second_angle = TRIG_MAX_ANGLE * t->tm_sec / 60;
-  GPoint second_hand = {
-    .x = (int16_t)(sin_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.x,
-    .y = (int16_t)(-cos_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.y,
-  };
-  GPoint second_tail = {
-    .x = (int16_t)(sin_lookup(second_angle) * (int32_t)second_tail_length / TRIG_MAX_RATIO) + center.x,
-    .y = (int16_t)(-cos_lookup(second_angle) * (int32_t)second_tail_length / TRIG_MAX_RATIO) + center.y,
-  };
 
   // minute/hour hand
   graphics_context_set_fill_color(ctx, GColorWhite);
@@ -119,14 +115,25 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
 
   //draw a circle
   uint16_t radius = 3;
-  graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorRed, GColorWhite));
+  graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(show_seconds ? GColorRed : GColorWhite, GColorWhite));
   graphics_fill_circle(ctx, center, radius);
 //   graphics_context_set_stroke_color(ctx, GColorBlack);
 //   graphics_draw_circle(ctx, center, radius);
 
-  // second hand
-  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorRed, GColorWhite));
-  graphics_draw_line(ctx, second_hand, second_tail);
+  if (show_seconds) {
+    int32_t second_angle = TRIG_MAX_ANGLE * t->tm_sec / 60;
+    GPoint second_hand = {
+      .x = (int16_t)(sin_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.x,
+      .y = (int16_t)(-cos_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.y,
+    };
+    GPoint second_tail = {
+      .x = (int16_t)(sin_lookup(second_angle) * (int32_t)second_tail_length / TRIG_MAX_RATIO) + center.x,
+      .y = (int16_t)(-cos_lookup(second_angle) * (int32_t)second_tail_length / TRIG_MAX_RATIO) + center.y,
+    };
+    // second hand
+    graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorRed, GColorWhite));
+    graphics_draw_line(ctx, second_hand, second_tail);
+  }
 
   // dot in the middle
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -341,6 +348,18 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     }
   }
 
+  // Read boolean preferences
+  Tuple *show_seconds_t = dict_find(iterator, MESSAGE_KEY_SHOW_SECONDS);
+  if (show_seconds_t) {
+    bool new_show_seconds = show_seconds_t->value->int32 == 1;
+    if (new_show_seconds != show_seconds) {
+      show_seconds = new_show_seconds;
+      persist_write_bool(SECONDS_KEY, show_seconds);
+      tick_timer_service_unsubscribe();
+      tick_timer_service_subscribe(show_seconds ? SECOND_UNIT : MINUTE_UNIT, handle_second_tick);
+      }
+  }
+
   rtltr_inbox_received_handler(iterator, context);
 }
 
@@ -383,7 +402,10 @@ static void init() {
     s_tick_paths[i] = gpath_create(&ANALOG_BG_POINTS[i]);
   }
 
-  tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
+  if (persist_exists(SECONDS_KEY)) {
+    show_seconds = persist_read_bool(SECONDS_KEY);
+  }
+  tick_timer_service_subscribe(show_seconds ? SECOND_UNIT : MINUTE_UNIT, handle_second_tick);
 
   app_message_register_inbox_received(inbox_received_callback);
   

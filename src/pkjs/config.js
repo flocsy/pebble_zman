@@ -18,6 +18,21 @@ module.exports = [
     "items": [
       {
         "type": "heading",
+        "defaultValue": "Appearance"
+      },
+      {
+        "type": "toggle",
+        "messageKey": "SHOW_SECONDS",
+        "label": "Show seconds hand",
+        "defaultValue": true
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
         "defaultValue": "Language Settings"
       },
       {

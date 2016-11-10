@@ -1,8 +1,5 @@
 {
     "author": "Beezy Works Studios",
-    "contributors": [
-        "Gavriel Fleischer <flocsy@gmail.com>"
-    ],
     "dependencies": {
         "pebble-clay": "^1.0.3",
         "pebble-rtltr": "^0.3.2",
@@ -20,7 +17,8 @@
         "messageKeys": [
             "LATITUDE",
             "LONGITUDE",
-            "ALTITUDE"
+            "ALTITUDE",
+            "SHOW_SECONDS"
         ],
         "projectType": "native",
         "resources": {
