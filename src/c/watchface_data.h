@@ -4,7 +4,7 @@
 
 #define NUM_ZMANIM 11
 extern char zman_names[NUM_ZMANIM][20];
-extern char hebrewNumbers[30][6];
+extern char* hebrewNumbers[];
 
 #define NUM_CLOCK_TICKS 13
 extern const struct GPathInfo ANALOG_BG_POINTS[NUM_CLOCK_TICKS];
