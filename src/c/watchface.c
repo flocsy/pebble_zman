@@ -330,6 +330,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       longitude = str_to_double(long_str);
       latitude = str_to_double(lat_str);
       
+       APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Longitude %s", long_str);
+     APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Latitude %s", lat_str);
+      
       recalculate_zmanim();
     }
   }
@@ -385,6 +388,8 @@ static void init() {
   int long_result = persist_read_string(LONG_KEY, lng_str, sizeof(lng_str));
   
   if(lat_result!=E_DOES_NOT_EXIST && long_result!=E_DOES_NOT_EXIST ){
+     APP_LOG(APP_LOG_LEVEL_DEBUG, "Saved Longitude %s", lng_str);
+     APP_LOG(APP_LOG_LEVEL_DEBUG, "Saved Latitude %s", lat_str);
     longitude = str_to_double(lng_str);
     latitude = str_to_double(lat_str);
     recalculate_zmanim();

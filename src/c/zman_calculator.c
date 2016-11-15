@@ -100,7 +100,9 @@ if (timezoneoffset < -SECONDS_IN_WEEK/2) timezoneoffset += SECONDS_IN_WEEK;
 
   timezoneoffset /= 3600;
   APP_LOG(APP_LOG_LEVEL_DEBUG, "timezone offset %d", timezoneoffset);
-  return UT+timezoneoffset;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "other timezone offset %d", (tick_time-gm_time));
+// return UT+(tick_time-gm_time);
+  return UT;
 }
 
 void calcZmanim(struct Zmanim* out_zmanim, int year, int month, int day, float latitude, float longitude)
