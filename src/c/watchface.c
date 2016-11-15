@@ -1,9 +1,13 @@
-#include "watchface.h"
+#include <pebble.h>
 
-#include "pebble.h"
+#include "watchface_data.h"
 #include "hebrewdate.h"
 #include "zman_calculator.h"
 #include "pebble-rtltr/rtltr.h"
+
+#define LAT_KEY 35
+#define LONG_KEY 36
+#define SECONDS_KEY 37
 
 int isdigit(int c)
 {
@@ -60,6 +64,7 @@ static TextLayer *s_zmanlabel_label, *s_zmantime_label, *s_hebday_label, *s_greg
 static GPath *s_tick_paths[NUM_CLOCK_TICKS];
 static GPath *s_minute_arrow, *s_hour_arrow;
 static char s_num_buffer[4], s_day_buffer[6], s_hebday_buffer[3], s_zmantime_buffer[6];
+static bool show_seconds = true;
 
 static GFont s_zmanlabel_font;
 
@@ -84,19 +89,17 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   GPoint center = grect_center_point(&bounds);
 
-  const int16_t second_hand_length = 71;
+  const int16_t second_hand_length = 71, second_tail_length = -12;
 
   time_t now = time(NULL);
-  struct tm *t = localtime(&now);
-  int32_t second_angle = TRIG_MAX_ANGLE * t->tm_sec / 60;
-  GPoint second_hand = {
-    .x = (int16_t)(sin_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.x,
-    .y = (int16_t)(-cos_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.y,
-  };
 
-  // second hand
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_draw_line(ctx, second_hand, center);
+  // Comment in next lines to take schreenshots
+  // now = 1286698230; // 10:10:30 timestamp for "display" to take screenshots from cloudpebble
+  // #if defined(PBL_PLATFORM_APLITE)
+  // now += 7200; // aplite should be in local time
+  // #endif
+
+  struct tm *t = localtime(&now);
 
   // minute/hour hand
   graphics_context_set_fill_color(ctx, GColorWhite);
@@ -110,16 +113,31 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   gpath_draw_filled(ctx, s_hour_arrow);
   gpath_draw_outline(ctx, s_hour_arrow);
 
+  //draw a circle
+  uint16_t radius = 3;
+  graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(show_seconds ? GColorRed : GColorWhite, GColorWhite));
+  graphics_fill_circle(ctx, center, radius);
+//   graphics_context_set_stroke_color(ctx, GColorBlack);
+//   graphics_draw_circle(ctx, center, radius);
+
+  if (show_seconds) {
+    int32_t second_angle = TRIG_MAX_ANGLE * t->tm_sec / 60;
+    GPoint second_hand = {
+      .x = (int16_t)(sin_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.x,
+      .y = (int16_t)(-cos_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.y,
+    };
+    GPoint second_tail = {
+      .x = (int16_t)(sin_lookup(second_angle) * (int32_t)second_tail_length / TRIG_MAX_RATIO) + center.x,
+      .y = (int16_t)(-cos_lookup(second_angle) * (int32_t)second_tail_length / TRIG_MAX_RATIO) + center.y,
+    };
+    // second hand
+    graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorRed, GColorWhite));
+    graphics_draw_line(ctx, second_hand, second_tail);
+  }
+
   // dot in the middle
   graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_fill_rect(ctx, GRect(bounds.size.w / 2 - 1, bounds.size.h / 2 - 1, 3, 3), 0, GCornerNone);
-
-  //draw a circle
-  uint16_t radius = 5;
-  graphics_context_set_fill_color(ctx, GColorWhite);
-  graphics_fill_circle(ctx, center, radius);
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-  graphics_draw_circle(ctx, center, radius);
+  graphics_fill_circle(ctx, center, 1);
 }
 
 static void update_hebrew_date(){
@@ -240,12 +258,8 @@ static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   const GRect bounds = layer_get_bounds(window_layer);
   const GPoint center = grect_center_point(&bounds);
-  x_offset = center.x-72; //+ PBL_IF_ROUND_ELSE(18, 0);
-  y_offset = center.y-84; //+ PBL_IF_ROUND_ELSE(6, 0);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "window_load: cx:%d, cy:%d ox:%d, oy:%d", center.x, center.y, x_offset, y_offset);
-//aplite: bg_update_proc: cx:72, cy:84 ox:0, oy:0
-//chalk: bg_update_proc: cx:90, cy:90 ox:18, oy:6
-//emery: bg_update_proc: cx:100, cy:114 ox:28, oy:30
+  x_offset = center.x-72;
+  y_offset = center.y-84;
 
   s_zmanlabel_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TAAMEI_FRANK_18));
 
@@ -337,6 +351,18 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     }
   }
 
+  // Read boolean preferences
+  Tuple *show_seconds_t = dict_find(iterator, MESSAGE_KEY_SHOW_SECONDS);
+  if (show_seconds_t) {
+    bool new_show_seconds = show_seconds_t->value->int32 == 1;
+    if (new_show_seconds != show_seconds) {
+      show_seconds = new_show_seconds;
+      persist_write_bool(SECONDS_KEY, show_seconds);
+      tick_timer_service_unsubscribe();
+      tick_timer_service_subscribe(show_seconds ? SECOND_UNIT : MINUTE_UNIT, handle_second_tick);
+      }
+  }
+
   rtltr_inbox_received_handler(iterator, context);
 }
 
@@ -347,9 +373,10 @@ void update_hebrew_layers() {
 
 void init_rtltr(void) {
   rtltr_ensure_registered_string_arrays_capacity(2);
-  rtltr_register_string_array(zman_names, NUM_ZMANIM);
-  rtltr_register_string_array(hebrewNumbers, 30);
+  rtltr_register_char_matrix((char* const *)zman_names, NUM_ZMANIM, 20);
+  rtltr_register_char_matrix((char* const *)hebrewNumbers, 30, 6);
   rtltr_register_callback_after_reverse_registered_strings(update_hebrew_layers);
+  rtltr_strings_are_visual_encoded();
   rtltr_load_settings();
 }
 
@@ -378,7 +405,10 @@ static void init() {
     s_tick_paths[i] = gpath_create(&ANALOG_BG_POINTS[i]);
   }
 
-  tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
+  if (persist_exists(SECONDS_KEY)) {
+    show_seconds = persist_read_bool(SECONDS_KEY);
+  }
+  tick_timer_service_subscribe(show_seconds ? SECOND_UNIT : MINUTE_UNIT, handle_second_tick);
 
   app_message_register_inbox_received(inbox_received_callback);
   
@@ -404,6 +434,8 @@ static void init() {
 }
 
 static void deinit() {
+  rtltr_free();
+
   gpath_destroy(s_minute_arrow);
   gpath_destroy(s_hour_arrow);
 
