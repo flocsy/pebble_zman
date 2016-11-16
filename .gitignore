@@ -32,4 +32,7 @@
 *.dSYM/
 *.su
 
-.idea/
+/.idea
+/build
+/.lock-waf_darwin_build
+/node_modules

@@ -373,8 +373,8 @@ void update_hebrew_layers() {
 
 void init_rtltr(void) {
   rtltr_ensure_registered_string_arrays_capacity(2);
-  rtltr_register_char_matrix((char* const *)zman_names, NUM_ZMANIM, 20);
-  rtltr_register_char_matrix((char* const *)hebrewNumbers, 30, 6);
+  rtltr_register_char_matrix((char* const *)zman_names, NUM_ZMANIM, LEN_ZMANIM);
+  rtltr_register_char_matrix((char* const *)hebrewNumbers, NUM_NUMBERS, LEN_NUMBERS);
   rtltr_register_callback_after_reverse_registered_strings(update_hebrew_layers);
   rtltr_strings_are_visual_encoded();
   rtltr_load_settings();
